@@ -1,2 +1,8 @@
+
 # zio-binance
-A ZIO wrapper for Binance's java client
+ZIO wrapper for the Binance Java client. 
+
+This is a work in progress...
+
+## Usage
+
