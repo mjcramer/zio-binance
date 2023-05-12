@@ -2,7 +2,7 @@ package io.github.mjcramer.binance.spot.market
 
 import io.circe.Json
 import io.github.mjcramer.binance.spot.{BaseSpec, BinanceSpotClient}
-import io.github.mjcramer.binance.spot.enums.{KlineInterval}
+import io.github.mjcramer.binance.spot.enums.KlineInterval
 import zio.ZIO
 import zio.test.{Spec, assertTrue}
 

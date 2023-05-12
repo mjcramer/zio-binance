@@ -32,23 +32,13 @@ lazy val `zio-binance` = (project in file("."))
     git.useGitDescribe := true,
     publish / skip := true
   )
-  .aggregate(core, examples)
+  .aggregate(`rest-api`, `websocket-api`, `websocket-streams`, examples)
 
 
-
-lazy val core = (project in file("binance"))
+lazy val `rest-api` = (project in file("rest-api"))
   .settings(
-    name := "zio-binance",
-//    ThisBuild / publishTo := {
-//      val nexus = "https://s01.oss.sonatype.org/"
-//      if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-//      else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-//    },
-//    ThisBuild / publishMavenStyle := true,
-//    Test / packageBin / publishArtifact := false,
+    name := "zio-binance-rest",
     scalacOptions ++= compilerOptions,
-//    crossScalaVersions := supportedScalaVersions,
-//    credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credentials"),
     libraryDependencies ++= Seq(
       Modules.binanceConnector,
       Modules.enumeratum,
@@ -60,8 +50,6 @@ lazy val core = (project in file("binance"))
 
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / fork := true,
-//    Test / testOptions  ++= Seq(Tests.Setup(() => MongoEmbedded.start), Tests.Cleanup(() => MongoEmbedded.stop)),
-//    Test / parallelExecution := false
   )
 
 lazy val examples = (project in file("examples"))
@@ -69,7 +57,11 @@ lazy val examples = (project in file("examples"))
     crossScalaVersions := Nil,
     publish / skip := true
   )
-  .dependsOn(core)
+  .dependsOn(`rest-api`)
+
+lazy val `websocket-api` = (project in file("websocket-api"))
+lazy val `websocket-streams` = (project in file("websocket-streams"))
+
 
 
 ///*
