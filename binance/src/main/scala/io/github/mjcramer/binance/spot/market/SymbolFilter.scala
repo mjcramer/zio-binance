@@ -1,8 +1,8 @@
 package io.github.mjcramer.binance.spot.market
 
-import io.circe.generic.semiauto.{deriveCodec, deriveDecoder, deriveEncoder}
+import io.circe.generic.semiauto.{ deriveCodec, deriveDecoder, deriveEncoder }
 import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.{ Decoder, Encoder, HCursor }
 
 sealed trait SymbolFilter
 
@@ -10,38 +10,40 @@ object SymbolFilter {
 
   implicit val decoder: Decoder[SymbolFilter] = Decoder.instance { c =>
     c.downField("filterType").as[String].flatMap {
-      case PriceFilter.filterType           => c.as[PriceFilter]
+      case PriceFilter.filterType => c.as[PriceFilter]
 //      case "PERCENT_PRICE"          => c.as[PercentPriceFilter]
-      case PercentPriceBySideFilter.filterType  => c.as[PercentPriceBySideFilter]
-      case LotSizeFilter.filterType              => c.as[LotSizeFilter]
-      case MinNotional.filterType   => c.as[MinNotional]
-      case IcebergParts.filterType          => c.as[IcebergParts]
-      case MarketLotSize.filterType       => c.as[MarketLotSize]
-      case TrailingDelta.filterType        => c.as[TrailingDelta]
-      case MaxNumOrders.filterType         => c.as[MaxNumOrders]
-      case MaxNumAlgoOrders.filterType    => c.as[MaxNumAlgoOrders]
+      case PercentPriceBySideFilter.filterType => c.as[PercentPriceBySideFilter]
+      case LotSizeFilter.filterType            => c.as[LotSizeFilter]
+      case MinNotional.filterType              => c.as[MinNotional]
+      case Notional.filterType                 => c.as[Notional]
+      case IcebergParts.filterType             => c.as[IcebergParts]
+      case MarketLotSize.filterType            => c.as[MarketLotSize]
+      case TrailingDelta.filterType            => c.as[TrailingDelta]
+      case MaxNumOrders.filterType             => c.as[MaxNumOrders]
+      case MaxNumAlgoOrders.filterType         => c.as[MaxNumAlgoOrders]
 //      case "MAX_NUM_ICEBERG_ORDERS" => c.as[MaxNumIcebergOrders]
     }
   }
 
   implicit val encoder: Encoder[SymbolFilter] = Encoder.instance {
-    case e: PriceFilter         => e.asJson
+    case e: PriceFilter => e.asJson
 //    case e: PercentPriceFilter  => e.asJson
     case e: PercentPriceBySideFilter => e.asJson
-    case e: LotSizeFilter       => e.asJson
-    case e: MinNotional         => e.asJson
-    case e: IcebergParts        => e.asJson
-    case e: MarketLotSize       => e.asJson
-    case e: TrailingDelta       => e.asJson
-    case e: MaxNumOrders        => e.asJson
-    case e: MaxNumAlgoOrders    => e.asJson
+    case e: LotSizeFilter            => e.asJson
+    case e: MinNotional              => e.asJson
+    case e: Notional                  => e.asJson
+    case e: IcebergParts             => e.asJson
+    case e: MarketLotSize            => e.asJson
+    case e: TrailingDelta            => e.asJson
+    case e: MaxNumOrders             => e.asJson
+    case e: MaxNumAlgoOrders         => e.asJson
 //    case e: MaxNumIcebergOrders => e.asJson
   }
 
   case class PriceFilter(
-    minPrice: BigDecimal,
-    maxPrice: BigDecimal,
-    tickSize: Double
+      minPrice: BigDecimal,
+      maxPrice: BigDecimal,
+      tickSize: Double
   ) extends SymbolFilter
 
   object PriceFilter {
@@ -94,12 +96,12 @@ object SymbolFilter {
 //  }
 
   case class PercentPriceBySideFilter(
-                                 bidMultiplierUp: Double,
-                                 bidMultiplierDown: Double,
-                                 askMultiplierUp: Double,
-                                 askMultiplierDown: Double,
-                                 avgPriceMins: Int
-                               ) extends SymbolFilter
+      bidMultiplierUp: Double,
+      bidMultiplierDown: Double,
+      askMultiplierUp: Double,
+      askMultiplierDown: Double,
+      avgPriceMins: Int
+  ) extends SymbolFilter
 
   object PercentPriceBySideFilter {
     val filterType = "PERCENT_PRICE_BY_SIDE"
@@ -125,9 +127,9 @@ object SymbolFilter {
   }
 
   case class LotSizeFilter(
-    minQty: BigDecimal,
-    maxQty: BigDecimal,
-    stepSize: Double
+      minQty: BigDecimal,
+      maxQty: BigDecimal,
+      stepSize: Double
   ) extends SymbolFilter
 
   object LotSizeFilter {
@@ -150,9 +152,9 @@ object SymbolFilter {
   }
 
   case class MinNotional(
-    minNotional: BigDecimal,
-    applyToMarket: Boolean,
-    avgPriceMins: Int
+      minNotional: BigDecimal,
+      applyToMarket: Boolean,
+      avgPriceMins: Int
   ) extends SymbolFilter
 
   object MinNotional {
@@ -174,8 +176,39 @@ object SymbolFilter {
     }
   }
 
+  case class Notional(
+      minNotional: BigDecimal,
+      applyMinToMarket: Boolean,
+      maxNotional: BigDecimal,
+      applyMaxToMarket: Boolean,
+      avgPriceMins: Int
+  ) extends SymbolFilter
+
+  object Notional {
+    val filterType = "NOTIONAL"
+
+    implicit val decoder: Decoder[Notional] = deriveDecoder
+    implicit val encoder: Encoder[Notional] = Encoder.forProduct6(
+      "filterType",
+      "minNotional",
+      "applyMinToMarket",
+      "maxNotional",
+      "applyMaxToMarket",
+      "avgPriceMins"
+    ) { notional =>
+      (
+        Notional.filterType,
+        notional.minNotional,
+        notional.applyMinToMarket,
+        notional.maxNotional,
+        notional.applyMaxToMarket,
+        notional.avgPriceMins
+      )
+    }
+  }
+
   case class IcebergParts(
-    limit: Int
+      limit: Int
   ) extends SymbolFilter
 
   object IcebergParts {
@@ -194,9 +227,9 @@ object SymbolFilter {
   }
 
   case class MarketLotSize(
-    minQty: BigDecimal,
-    maxQty: BigDecimal,
-    stepSize: Double
+      minQty: BigDecimal,
+      maxQty: BigDecimal,
+      stepSize: Double
   ) extends SymbolFilter
 
   object MarketLotSize {
@@ -219,10 +252,10 @@ object SymbolFilter {
   }
 
   case class TrailingDelta(
-    minTrailingAboveDelta: Int,
-    maxTrailingAboveDelta: Int,
-    minTrailingBelowDelta: Int,
-    maxTrailingBelowDelta: Int
+      minTrailingAboveDelta: Int,
+      maxTrailingAboveDelta: Int,
+      minTrailingBelowDelta: Int,
+      maxTrailingBelowDelta: Int
   ) extends SymbolFilter
 
   object TrailingDelta {
@@ -247,7 +280,7 @@ object SymbolFilter {
   }
 
   case class MaxNumOrders(
-    maxNumOrders: Int
+      maxNumOrders: Int
   ) extends SymbolFilter
 
   object MaxNumOrders {
@@ -266,7 +299,7 @@ object SymbolFilter {
   }
 
   case class MaxNumAlgoOrders(
-    maxNumAlgoOrders: Int
+      maxNumAlgoOrders: Int
   ) extends SymbolFilter
 
   object MaxNumAlgoOrders {

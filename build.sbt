@@ -9,6 +9,10 @@ ThisBuild / developers       := List(Developer("", "mjcramer", "mjcramer@gmail.c
 ThisBuild / licenses         := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / homepage         := Some(url("https://github.com/mjcramer/zio-binance"))
 ThisBuild / versionScheme    := Some("early-semver")
+ThisBuild / git.useGitDescribe := true
+
+enablePlugins(GitVersioning)
+enablePlugins(GitBranchPrompt)
 
 lazy val compilerOptions = Seq(
   "-deprecation",
@@ -22,9 +26,10 @@ lazy val compilerOptions = Seq(
   "-unchecked",
   )
 
-lazy val zioBinance = (project in file("."))
+lazy val `zio-binance` = (project in file("."))
   .settings(
     crossScalaVersions := Nil,
+    git.useGitDescribe := true,
     publish / skip := true
   )
   .aggregate(core, examples)
