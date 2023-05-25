@@ -14,9 +14,11 @@ object BinanceSpotClientConfig {
     BinanceSpotClientConfig(apiKey, secretKey, DefaultUrls.PROD_URL)
 
 
-  val testing = BinanceSpotClientConfig(
-    sys.env.getOrElse("BINANCE_API_KEY", ""),
-    sys.env.getOrElse("BINANCE_SECRET_KEY", ""),
-    DefaultUrls.TESTNET_URL
-  )
+  val testing: BinanceSpotClientConfig = {
+    for {
+      apiKey <- sys.env.get("BINANCE_API_KEY")
+      secretKey <- sys.env.get("BINANCE_SECRET_KEY")
+    } yield BinanceSpotClientConfig(apiKey, secretKey, DefaultUrls.TESTNET_URL)
+  }.getOrElse(throw new RuntimeException("Missing Binance API key and/or secret key"))
+
 }

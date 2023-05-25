@@ -19,7 +19,6 @@ object BinanceWebsocketStreamClientSpec extends BaseSpec {
         for {
           client <- ZIO.service[BinanceWebsocketStreamClient]
           result <- client.aggTradeStream(Symbols.BITCOIN_US).run(ZSink.take(numberToTake))
-          _      <- ZIO.succeed(println(result))
         } yield assertTrue(
           result.size == numberToTake,
           result.forall(_.tradeId > 0L)
@@ -30,7 +29,6 @@ object BinanceWebsocketStreamClientSpec extends BaseSpec {
         for {
           client <- ZIO.service[BinanceWebsocketStreamClient]
           result <- client.tradeStream(Symbols.BITCOIN_US).run(ZSink.take(numberToTake))
-          _ <- ZIO.succeed(println(result))
         } yield assertTrue(
           result.size == numberToTake,
           result.forall(_.id > 0L)
@@ -41,7 +39,6 @@ object BinanceWebsocketStreamClientSpec extends BaseSpec {
         for {
           client <- ZIO.service[BinanceWebsocketStreamClient]
           result <- client.klineStream(Symbols.BITCOIN_US, "1s").run(ZSink.take(numberToTake))
-          _ <- ZIO.succeed(println(result))
         } yield assertTrue(
           result.size == numberToTake,
           result.forall(_.openTime > 0L)
