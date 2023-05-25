@@ -18,4 +18,7 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
       - name: Run tests
+        env:
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_SECRET_KEY: ${{ secrets.BINANCE_SECRET_KEY }}
         run: sbt test
