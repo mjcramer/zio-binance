@@ -20,7 +20,7 @@ case class BinanceWebsocketStreamClient(wrapped: WebsocketStreamClient) extends 
     Chunk.empty
   }
 
-  private def parseAsJson[E](data: String)(implicit decoder: Decoder[E]) = ZIO.fromEither {
+  private def parseAsJson[E: Decoder](data: String) = ZIO.fromEither {
     logger.debug(s"Websocket callback received data: $data")
     parse(data).flatMap { json =>
       logger.trace(json.toString)
@@ -51,8 +51,6 @@ case class BinanceWebsocketStreamClient(wrapped: WebsocketStreamClient) extends 
         (data: String) => callback(logFailedStream(s"Aggregate trade stream failed for symbol $symbol with error: $data"))
       )
     }
-  // TODO: We're gonna have to handle server-side disconnects and reconnects
-  //  int aggTradeStream(symbol: String, WebSocketCallback onOpenCallback, WebSocketCallback onMessageCallback, WebSocketCallback onClosingCallback, WebSocketCallback onFailureCallback);
 
   def tradeStream(symbol: String): ZStream[Any, Throwable, Trade] =
     ZStream.async[Any, Throwable, Trade] { callback =>
@@ -76,17 +74,107 @@ case class BinanceWebsocketStreamClient(wrapped: WebsocketStreamClient) extends 
       )
     }
 
+  def miniTickerStream(symbol: String): ZStream[Any, Throwable, Trade] =
+    ZStream.async[Any, Throwable, Trade] { callback =>
+      wrapped.miniTickerStream(
+        symbol,
+        (data: String) => callback(logOpenStream(s"Trade stream opened for symbol $symbol.")),
+        (data: String) => callback(parseAsJson[Trade](data)),
+        (data: String) => callback(logCloseStream(s"Trade stream closed for symbol $symbol.")),
+        (data: String) => callback(logFailedStream(s"Trade stream failed for symbol $symbol with error: $data"))
+      )
+    }
 
-  //    def miniTickerStream(symbol: String) = ???
-//    def allMiniTickerStream() = ???
-//    def symbolTicker(symbol: String) = ???
-//    def allTickerStream() = ???
-//    def rollingWindowTicker(symbol: String, windowSize: String) = ???
-//    def allRollingWindowTicker(windowSize: String) = ???
-//    def bookTicker(symbol: String) = ???
-//    def partialDepthStream(symbol: String, levels: Int, speed: Int) = ???
-//    def diffDepthStream(symbol: String, speed: Int) = ???
-//    def listenUserStream(listenKey: String) = ???
+
+  def symbolTicker(symbol: String): ZStream[Any, Throwable, Trade] =
+    ZStream.async[Any, Throwable, Trade] { callback =>
+      wrapped.symbolTicker(
+        symbol,
+        (data: String) => callback(logOpenStream(s"Trade stream opened for symbol $symbol.")),
+        (data: String) => callback(parseAsJson[Trade](data)),
+        (data: String) => callback(logCloseStream(s"Trade stream closed for symbol $symbol.")),
+        (data: String) => callback(logFailedStream(s"Trade stream failed for symbol $symbol with error: $data"))
+      )
+    }
+
+  def allTickerStream(): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, List[Kline]] { callback =>
+      wrapped.allTickerStream(
+        (data: String) => callback(logOpenStream(s"Ticker stream for all symbols opened.")),
+        (data: String) => callback(parseAsJson[List[Kline]](data)),
+        (data: String) => callback(logCloseStream(s"Ticker stream for all symbols closed.")),
+        (data: String) => callback(logFailedStream(s"Ticker stream for all symbols failed with error: $data"))
+      )
+    }.flatMap(ZStream.fromIterable) // flatten the list
+
+
+  def rollingWindowTicker(symbol: String, windowSize: String): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, Kline] { callback =>
+      wrapped.rollingWindowTicker(
+        symbol, windowSize,
+        (data: String) => callback(logOpenStream(s"Rolling window $windowSize ticker for symbol $symbol is open.")),
+        (data: String) => callback(parseAsJson[Kline](data)),
+        (data: String) => callback(logCloseStream(s"Rolling window $windowSize for symbol $symbol has closed.")),
+        (data: String) => callback(logFailedStream(s"Rolling window $windowSize ticker for symbol $symbol failed with error: $data"))
+      )
+    }
+
+  def allRollingWindowTicker(windowSize: String): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, Kline] { callback =>
+      wrapped.allRollingWindowTicker(
+        windowSize,
+        (data: String) => callback(logOpenStream(s"Rolling window $windowSize ticker for all symbols is open.")),
+        (data: String) => callback(parseAsJson[Kline](data)),
+        (data: String) => callback(logCloseStream(s"Rolling window $windowSize for all symbols has closed.")),
+        (data: String) => callback(logFailedStream(s"Rolling window $windowSize ticker for all symbols failed with error: $data"))
+      )
+    }
+
+
+  def bookTicker(symbol: String): ZStream[Any, Throwable, Trade] =
+    ZStream.async[Any, Throwable, Trade] { callback =>
+      wrapped.bookTicker(
+        symbol,
+        (data: String) => callback(logOpenStream(s"Trade stream opened for symbol $symbol.")),
+        (data: String) => callback(parseAsJson[Trade](data)),
+        (data: String) => callback(logCloseStream(s"Trade stream closed for symbol $symbol.")),
+        (data: String) => callback(logFailedStream(s"Trade stream failed for symbol $symbol with error: $data"))
+      )
+    }
+
+  def partialDepthStream(symbol: String, levels: Int, speed: Int): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, Kline] { callback =>
+      wrapped.partialDepthStream(
+        symbol, levels, speed,
+        (data: String) => callback(logOpenStream(s"Kline stream opened for symbol $symbol.")),
+        (data: String) => callback(parseAsJson[Kline](data)),
+        (data: String) => callback(logCloseStream(s"Kline stream closed for symbol $symbol.")),
+        (data: String) => callback(logFailedStream(s"Kline stream failed for symbol $symbol with error: $data"))
+      )
+    }
+
+  def diffDepthStream(symbol: String, speed: Int): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, Kline] { callback =>
+      wrapped.diffDepthStream(
+        symbol, speed,
+        (data: String) => callback(logOpenStream(s"Kline stream opened for symbol $symbol.")),
+        (data: String) => callback(parseAsJson[Kline](data)),
+        (data: String) => callback(logCloseStream(s"Kline stream closed for symbol $symbol.")),
+        (data: String) => callback(logFailedStream(s"Kline stream failed for symbol $symbol with error: $data"))
+      )
+    }
+
+
+  def listenUserStream(listenKey: String): ZStream[Any, Throwable, Kline] =
+    ZStream.async[Any, Throwable, Kline] { callback =>
+      wrapped.listenUserStream(
+        listenKey,
+        (data: String) => callback(logOpenStream(s"Listen user stream for key $listenKey is open.")),
+        (data: String) => callback(parseAsJson[Kline](data)),
+        (data: String) => callback(logCloseStream(s"Listen user stream for key $listenKey has closed.")),
+        (data: String) => callback(logFailedStream(s"Listen user stream for key $listenKey failed with error: $data"))
+      )
+    }
 
 }
 

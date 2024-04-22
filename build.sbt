@@ -68,9 +68,12 @@ lazy val spot = (project in file("spot"))
 //  )
 
 lazy val examples = (project in file("examples"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(common *)
   .settings(
-    crossScalaVersions := Nil,
-    publish / skip := true
+    crossScalaVersions := Nil
   )
   .dependsOn(spot)
 
+// Alias for running the streaming example
+addCommandAlias("runStreamExample", "examples/runMain io.github.mjcramer.binance.examples.ZioBinanceStreamExample")
